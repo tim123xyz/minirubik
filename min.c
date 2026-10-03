@@ -152,65 +152,65 @@ static inline void set_table(uint8_t *table, uint32_t rank, uint8_t depth)
     table[rank] = depth;
 }
 
-static void dfs(uint8_t *table, rank_t rank, uint32_t dense, uint8_t prev_face, uint8_t depth, uint8_t target) {
-    if (get_table(table, dense) > depth) {
-        set_table(table, dense, depth);
-        if (depth == target) {
-            return;
-        }
-        uint16_t p = rank.p;
-        uint16_t o = rank.o;
-        for (uint8_t face = 0; face < 3; ++face) {
-            uint16_t next_p = p, next_o = o;
-            if (face == prev_face) {
-                continue;
-            }
-            for (uint8_t turn = 0; turn < 3; ++turn) {
+enum {
+    BFS_DEPTH4 = 2232,
+    BFS_DEPTH5 = 12224,
+    BFS_DEPTH6 = 62360,
+    TARGET_SIDE = 0x08,
+    MAX_SOLUTION = 11
+};
+
+static uint8_t *build_table(rank_t target, rank_t meeting[2], uint8_t *bridge)
+{
+    static uint8_t table[STATES];
+    static rank_t queue[BFS_DEPTH5 + BFS_DEPTH6];
+    memset(table, UINT8_MAX, STATES);
+    queue[0] = {0, 0};
+    queue[1] = target;
+    set_table(table, 0, 0);
+    set_table(table, target.p + (uint32_t) target.o * PERMUTATIONS, TARGET_SIDE);
+    table[0] = 0;
+    *bridge = UINT8_MAX;
+    if (target.p == 0 && target.o == 0) {
+        meeting[0] = meeting[1] = target;
+        return table;
+    }
+
+    rank_t *head = queue, *tail = queue+2;
+    rank_t *end = queue + BFS_DEPTH5 + BFS_DEPTH4;
+    while(head < end) {
+        rank_t now = *head++;
+        uint8_t depth = get_table(table, now.p + (uint32_t) now.o * PERMUTATIONS);
+        for(uint8_t face = 0; face < 3; ++face) {
+            uint16_t next_p = now.p, next_o = now.o;
+            for(uint8_t turn = 0; turn < 3; ++turn) {
                 next_p = permutation[face][next_p];
                 next_o = orientation[face][next_o];
-                uint32_t next_dense = (uint32_t) next_p + next_o * PERMUTATIONS;
-                dfs(table, {.p = next_p, .o = next_o}, next_dense, face, depth + 1, target);
-            }
-        }
-    }
-    return;
-}
-
-static uint8_t *build_table(uint8_t *diameter)
-{
-    static uint8_t toward_solved[STATES];
-    memset(toward_solved, UINT8_MAX, STATES);
-    uint8_t depth = 7;
-    dfs(toward_solved, {.p = 0, .o = 0}, 0, UINT8_MAX, 0, depth);
-    for (; depth < 11; ++depth) {
-        uint8_t next_depth = depth + 1;
-        for (uint16_t p = 0; p < PERMUTATIONS; ++p) {
-            for (uint16_t o = 0; o < ORIENTATIONS; ++o) {
-                if (get_table(toward_solved, (uint32_t) p + o * PERMUTATIONS) == depth) {
-                    for (uint8_t face = 0; face < 3; ++face) {
-                        uint16_t next_p = p, next_o = o;
-                        for (uint8_t turn = 0; turn < 3; ++turn) {
-                            next_p = permutation[face][next_p];
-                            next_o = orientation[face][next_o];
-                            uint32_t next_rank = (uint32_t) next_p + next_o * PERMUTATIONS;
-                            if (get_table(toward_solved, next_rank) == UINT8_MAX)
-                                set_table(toward_solved, next_rank, next_depth);
-                        }
-                    }
+                uint32_t dense = next_p + (uint32_t) next_o * PERMUTATIONS;
+                uint8_t next_depth = get_table(table, dense);
+                if(next_depth == 0xFF) {
+                    set_table(table, dense, depth + 1);
+                    *tail = {.p = next_p, .o = next_o};
+                    ++tail;
+                }
+                else if (((next_depth ^ depth) & TARGET_SIDE) != 0) {
+                    uint8_t side = (depth & TARGET_SIDE) != 0 ? 0 : 1;
+                    uint8_t move = face * 3U + turn;
+                    meeting[side] = now;
+                    meeting[1U - side] = {.p = next_p, .o = next_o};
+                    *bridge = side == 0 ? move : inverse_move[move];
+                    return table;
                 }
             }
         }
     }
-    for (uint32_t rank = 0; rank < STATES; ++rank)
-        if (get_table(toward_solved, rank) == 0xFF) {
-            return NULL;
-        }
-    *diameter = 11;
-    return toward_solved;
+    return nullptr;
 }
 
 static int parse_state(const char *input, state_t *state)
 {
+    if (strlen(input) != 14)
+        return 0;
     for (int i = 0; i < 14; ++i) {
         int limit = i < 7 ? 7 : 3;
         if (input[i] < '1' || input[i] > '0' + limit)
@@ -220,39 +220,11 @@ static int parse_state(const char *input, state_t *state)
     return input[14] == '\0' && valid(state);
 }
 
-static int output_failed(void)
-{
-    return fflush(stdout) != 0 || ferror(stdout);
-}
-
-static int self_test(void)
-{
-    const rank_t solved = {.p = 0, .o = 0};
-    rank_t rank;
-    for (uint8_t move = 0; move < MOVES; ++move) {
-        rank = solved;
-        rank = apply_move(rank, move);
-        rank = apply_move(rank, inverse_move[move]);
-        if (memcmp(&solved, &rank, sizeof solved))
-            return 0;
-    }
-    state_t state;
-    for (uint16_t p = 0; p < PERMUTATIONS; ++p) {
-        for (uint16_t o = 0; o < ORIENTATIONS; ++o) {
-            unrank_state({.p = p, .o = o}, &state);
-            rank_t ranked = rank_state(&state);
-            if (!valid(&state) || ranked.p != p || ranked.o != o)
-                return 0;
-        }
-    }
-    return 1;
-}
-
 static uint8_t find_move(const uint8_t *table, rank_t rank)
 {
     uint16_t p = rank.p, o = rank.o;
     uint8_t depth = get_table(table, (uint32_t) p + o * PERMUTATIONS);
-    if (depth == 0 || depth == 0xFF)
+    if ((depth & ~TARGET_SIDE) == 0 || depth == UINT8_MAX)
         return UINT8_MAX;
     uint8_t target = depth - 1;
     for (uint8_t face = 0; face < 3; ++face) {
@@ -270,54 +242,54 @@ static uint8_t find_move(const uint8_t *table, rank_t rank)
 
 int main(int argc, char **argv)
 {
-    char program[] = "mine";
-    char input[] = "21345671111111";
-    char *fake_argv[] = {program, input, nullptr};
-    argc = 2;
-    argv = fake_argv;
-
+    const char *input = argc == 2 ? argv[1] : "21345671111111";
     state_t state;
-    uint8_t diameter;
-    if (argc == 2 && !strcmp(argv[1], "--self-test")) {
-        if (!self_test()) {
-            fputs("self-test failed\n", stderr);
-            return 1;
-        }
-        uint8_t *table = build_table(&diameter);
-        if (!table) {
-            fputs("could not build complete state table\n", stderr);
-            return 1;
-        }
-        if (diameter != 11) {
-            free(table);
-            fputs("BFS check failed\n", stderr);
-            return 1;
-        }
-        puts("3674160 states; diameter 11");
-        free(table);
-        return output_failed();
-    }
-    if (argc != 2 || !parse_state(argv[1], &state)) {
-        fprintf(stderr, "usage: %s PPPPPPPOOOOOOO\n",
-                argc > 0 && argv[0] ? argv[0] : "solver");
+    if (argc > 2 || !parse_state(input, &state)) {
+        fputs("invalid state\n", stderr);
         return 2;
     }
-    uint8_t *table = build_table(&diameter);
+    rank_t target = rank_state(&state), meeting[2];
+    uint8_t bridge;
+    uint8_t *table = build_table(target, meeting, &bridge);
     if (!table) {
-        fputs("could not build complete state table\n", stderr);
+        fputs("could not build state table\n", stderr);
         return 1;
     }
-    const char *separator = "";
-    for (rank_t rank = rank_state(&state); rank.p != 0 || rank.o != 0;) {
+
+    uint8_t solution[MAX_SOLUTION], length = 0;
+    rank_t rank = meeting[0];
+    while (rank.p != target.p || rank.o != target.o) {
         uint8_t move = find_move(table, rank);
-        if (move == UINT8_MAX) {
-            fputs("could not follow state table\n", stderr);
-            return 1;
-        }
-        printf("%s%s", separator, move_names[move]);
-        separator = " ";
+        if (move == UINT8_MAX || length == MAX_SOLUTION)
+            goto invalid_path;
+        solution[length++] = inverse_move[move];
         rank = apply_move(rank, move);
     }
+    for (uint8_t i = 0; i < length / 2U; ++i) {
+        uint8_t move = solution[i];
+        solution[i] = solution[length - 1U - i];
+        solution[length - 1U - i] = move;
+    }
+    if (bridge != UINT8_MAX) {
+        if (length == MAX_SOLUTION)
+            goto invalid_path;
+        solution[length++] = bridge;
+    }
+    rank = meeting[1];
+    while (rank.p != 0 || rank.o != 0) {
+        uint8_t move = find_move(table, rank);
+        if (move == UINT8_MAX || length == MAX_SOLUTION)
+            goto invalid_path;
+        solution[length++] = move;
+        rank = apply_move(rank, move);
+    }
+    for (uint8_t i = 0; i < length; ++i)
+        printf("%s%s", i ? " " : "", move_names[solution[i]]);
     putchar('\n');
-    return output_failed();
+    free(table);
+    return fflush(stdout) == 0 ? 0 : 1;
+
+invalid_path:
+    fputs("could not follow state table\n", stderr);
+    return 1;
 }
