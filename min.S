@@ -1,6 +1,6 @@
 .equ PERMUTATIONS, 5040
 .equ ORIENTATIONS, 729
-.equ TARGET_SIDE, 8
+.equ TARGET_SIDE, 128
 .equ BFS_DEPTH4, 2232
 .equ BFS_DEPTH5, 12224
 .equ BFS_DEPTH6, 62360
@@ -21,6 +21,21 @@ move_names:
 .Lmove_D:      .string "D "
 .Lmove_D2:     .string "D2 "
 .Lmove_Dprime: .string "D' "
+
+move_faces:
+    .byte 3, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3
+
+.balign 4
+move_data:
+    .word permutation, orientation, 1, 2
+    .word permutation, orientation, 2, 1
+    .word permutation, orientation, 3, 0
+    .word permutation + 2*PERMUTATIONS, orientation + 2*ORIENTATIONS, 1, 5
+    .word permutation + 2*PERMUTATIONS, orientation + 2*ORIENTATIONS, 2, 4
+    .word permutation + 2*PERMUTATIONS, orientation + 2*ORIENTATIONS, 3, 3
+    .word permutation + 4*PERMUTATIONS, orientation + 4*ORIENTATIONS, 1, 8
+    .word permutation + 4*PERMUTATIONS, orientation + 4*ORIENTATIONS, 2, 7
+    .word permutation + 4*PERMUTATIONS, orientation + 4*ORIENTATIONS, 3, 6
 
 .balign 4
 .globl permutation
@@ -1490,6 +1505,16 @@ popcount:
 input:
     .string "21345671111111"
 
+.balign 4
+.type table_o, @object
+table_o:
+    .set .Lo, 0
+    .rept ORIENTATIONS
+        .word .Lheap_start + PERMUTATIONS*.Lo
+        .set .Lo, .Lo+1
+    .endr
+.size table_o, .-table_o
+
 .section .text
 .globl main
 .type main, @function
@@ -1560,7 +1585,9 @@ parse_state:
     sll t4, a2, t3
     addi t5, t4, -1
     and t5, t5, t0
-    xor t0, t0, t4
+    .if \factor != 2
+        xor t0, t0, t4
+    .endif
     add t5, t2, t5
     lbu t5, 0(t5)
     mul\factor t1, t1
@@ -1599,96 +1626,81 @@ rank_state:
     ret
 .size rank_state, .-rank_state
 
-.macro memset ptr, size, value
-    mv t6, \ptr
-    li t5, \size
-    add t5, \ptr, t5
-    li t4, \value
-.mloop:
-    sw   t4, 0(t6)
-    addi t6, t6, 4
-    bne t6, t5, .mloop
+.macro table_address rd, ptr, p, o
+    slli \rd, \o, 2
+    add \rd, \ptr, \rd
+    lw \rd, 0(\rd)
+    add \rd, \rd, \p
 .endm
 
-.macro get_table rd, ptr, dense
-    add t6, \ptr, \dense
-    lbu \rd, 0(t6)
-.endm
-
-.macro set_table rs, ptr, dense
-    add t6, \ptr, \dense
-    sb \rs, 0(t6)
-.endm
-
-.macro mul5040 rd, input
-    slli t6, \input, 2
-    add  t6, t6, \input
-    slli \rd, t6, 6
-    sub  \rd, \rd, t6
-    slli \rd, \rd, 4
-.endm
-
-.macro to_dense rd, p, o
-    mul5040 t5, \o
-    add \rd, t5, \p
-.endm
-
-.macro turn_loop face turn
-    la t2, permutation + 2*\face*PERMUTATIONS
-    slli t3, t0, 1
-    add t2, t2, t3
+.macro turn_loop dir face turn per ori
+    .if \turn == 0
+        add t2, \per, s9
+    .else
+        slli t3, t0, 1
+        add t2, \per, t3
+    .endif
     lhu t0, 0(t2)
 
-    la t2, orientation + 2*\face*ORIENTATIONS
-    slli t3, t1, 1
-    add t2, t2, t3
+    .if \turn == 0
+        add t2, \ori, s3
+    .else
+        slli t3, t1, 1
+        add t2, \ori, t3
+    .endif
     lhu t1, 0(t2)
 
-    to_dense t3, t0, t1
-    get_table t4, s2, t3
-    
-    bne t4, x0, .touched\face\turn
-    addi t5, s9, 1
-
-    set_table t5, s2, t3
-    sh t0, 0(s5)
-    sh t1, 2(s5)
-    addi s5, s5, 4
-    j .end\face\turn
-
-.touched\face\turn:
-    xor t5, t4, s9
-    andi t5, t5, TARGET_SIDE
-    beq t5, x0, .end\face\turn
-    andi t5, s9, TARGET_SIDE
-    mv a0, s2
-    bne t5, x0, .side1\face\turn
-    # side == 0
-    mv a1, s7
-    mv a2, s8
-    mv a3, t0
-    mv a4, t1
-    li a5, 3*\face + 2 - \turn
-    ret
-    
-    # side == 1
-.side1\face\turn:
-    mv a1, t0
-    mv a2, t1
-    mv a3, s7
-    mv a4, s8
-    li a5, 3*\face + \turn
-    ret
-.end\face\turn:
+    table_address t6, s11, t0, t1
+    lb t4, 0(t6)
+    .ifc \dir, B
+        bge t4, x0, .end\dir\face\turn
+        mv a0, s2
+        mv a1, s7
+        mv a2, s8
+        mv a3, t0
+        mv a4, t1
+        li a5, 3*\face + 2 - \turn
+        ret
+    .else
+        .ifc \dir, A1
+            blt t4, x0, .end\dir\face\turn
+            bnez t4, .meet\dir\face\turn
+        .else
+            blt t4, x0, .meet\dir\face\turn
+            bnez t4, .end\dir\face\turn
+        .endif
+        ori t5, s1, 3*\face + 3 - \turn
+        sb t5, 0(t6)
+        sh t0, 0(s5)
+        sh t1, 2(s5)
+        addi s5, s5, 4
+    .endif
+.end\dir\face\turn:
 .endm
 
-.macro face_loop face
-    # next.p at t0, next.o at t1
-    mv t0, s7
-    mv t1, s8
-    turn_loop \face 0
-    turn_loop \face 1
-    turn_loop \face 2
+.macro face_loop dir face face_reg per ori
+    beq s10, \face_reg, .endface\dir\face
+    turn_loop \dir \face 0 \per \ori
+    turn_loop \dir \face 1 \per \ori
+    turn_loop \dir \face 2 \per \ori
+.endface\dir\face:
+.endm
+
+.macro meeting_return dir face turn
+.meet\dir\face\turn:
+    .ifc \dir, A1
+        li a5, 3*\face + \turn
+        j .meeting_side1
+    .else
+        li a5, 3*\face + 2 - \turn
+        j .meeting_side0
+    .endif
+.endm
+
+.macro meeting_face dir face
+    meeting_return \dir \face 0
+    meeting_return \dir \face 1
+    meeting_return \dir \face 2
 .endm
 
 .globl build_table
@@ -1709,92 +1721,144 @@ build_table:
     la s2, .Lheap_start
     li t0, PERMUTATIONS*ORIENTATIONS
     add s3, s2, t0
-    li t0, 4*(BFS_DEPTH5+BFS_DEPTH6)
+    li t0, 4*(BFS_DEPTH5+BFS_DEPTH5)
     add a0, s3, t0
     li a7, 214
     ecall
     # memset s2, PERMUTATIONS*ORIENTATIONS, 0
+    la s11, table_o
 
     # init queue[], table[]
     sw x0, 0(s3)
     sh s0, 4(s3)
     sh s1, 6(s3)
 
-    li t1, 1
-    set_table t1, s2, x0
-    to_dense t0, s0, s1
-    li t1, TARGET_SIDE+1
-    set_table t1, s2, t0
+    li t1, 10
+    sb t1, 0(s2)
+    table_address t6, s11, s0, s1
+    li t1, TARGET_SIDE+10
+    sb t1, 0(t6)
+    la s0, move_faces
+
+    la a0, permutation
+    la a1, orientation
+    li a2, 1
+    la a3, permutation + 2*PERMUTATIONS
+    la a4, orientation + 2*ORIENTATIONS
+    li a5, 2
+    la a6, permutation + 2*2*PERMUTATIONS
+    la a7, orientation + 2*2*ORIENTATIONS
 
     # head at s4, tail at s5, end at s6
     mv s4, s3
     addi s5, s3, 8
-    li t2, 4*(BFS_DEPTH4+BFS_DEPTH5)
+    li t2, 4*(BFS_DEPTH4+BFS_DEPTH4)
     add s6, s3, t2
     # loop start
-.loop:
-    # now.p at s7, now.o at s8, depth at s9
+.loop_A:
+    # now.p at s7, now.o at s8; 2*now.p at s9, 2*now.o at s3
     lhu s7, 0(s4)
     lhu s8, 2(s4)
     addi s4, s4, 4
-    to_dense t2, s7, s8
-    get_table s9, s2, t2
-    face_loop 0
-    face_loop 1
-    face_loop 2
-    bltu s4, s6, .loop
+    table_address t6, s11, s7, s8
+    lb t4, 0(t6)
+    andi s10, t4, 15
+    add s10, s0, s10
+    lbu s10, 0(s10)
+    andi s1, t4, TARGET_SIDE
+    slli s9, s7, 1
+    slli s3, s8, 1
+    beqz s1, .side0_A
+    face_loop A1 0 x0 a0 a1
+    face_loop A1 1 a2 a3 a4
+    face_loop A1 2 a5 a6 a7
+    bltu s4, s6, .loop_A
+    j .stage_B
+.side0_A:
+    face_loop A0 0 x0 a0 a1
+    face_loop A0 1 a2 a3 a4
+    face_loop A0 2 a5 a6 a7
+.next_A:
+    bltu s4, s6, .loop_A
+
+.stage_B:
+    li t2, 4*(BFS_DEPTH5-BFS_DEPTH4)
+    add s6, s6, t2
+.loop_B:
+    lhu s7, 0(s4)
+    lhu s8, 2(s4)
+    addi s4, s4, 4
+    table_address t6, s11, s7, s8
+    lbu s10, 0(t6)
+    add s10, s0, s10
+    lbu s10, 0(s10)
+    slli s9, s7, 1
+    slli s3, s8, 1
+    face_loop B 0 x0 a0 a1
+    face_loop B 1 a2 a3 a4
+    face_loop B 2 a5 a6 a7
+    bltu s4, s6, .loop_B
     li a0, 0
+    ret
+
+    meeting_face A0 0
+    meeting_face A0 1
+    meeting_face A0 2
+    meeting_face A1 0
+    meeting_face A1 1
+    meeting_face A1 2
+.meeting_side0:
+    mv a0, s2
+    mv a1, s7
+    mv a2, s8
+    mv a3, t0
+    mv a4, t1
+    ret
+.meeting_side1:
+    mv a0, s2
+    mv a1, t0
+    mv a2, t1
+    mv a3, s7
+    mv a4, s8
     ret
 .size build_table, .-build_table
 
-.macro fturn_loop dir face turn
-    la t2, permutation + 2*\face*PERMUTATIONS
-    slli t3, t0, 1
-    add t2, t2, t3
-    lhu t0, 0(t2)
+.macro fturn_loop
+    slli t3, a1, 1
+    add t2, a3, t3
+    lhu a1, 0(t2)
 
-    la t2, orientation + 2*\face*ORIENTATIONS
-    slli t3, t1, 1
-    add t2, t2, t3
-    lhu t1, 0(t2)
+    slli t3, a2, 1
+    add t2, a4, t3
+    lhu a2, 0(t2)
+.endm
 
-    to_dense t3, t0, t1
-    get_table t4, s0, t3
+.macro fface_loop dir
+    slli t2, s3, 4
+    add t2, s0, t2
+    lw a3, 0(t2)
+    lw a4, 4(t2)
+    lw t4, 8(t2)
     .ifc \dir, B
-        addi t4, t4, -TARGET_SIDE
+        lw s3, 12(t2)
     .endif
-    bne t4, s3, .skip\dir\face\turn
-    .ifc \dir, A
-        li t3, 3*\face + \turn
-    .else
-        li t3, 3*\face + 2 - \turn
-    .endif
-    j .mfloop\dir
-
-.skip\dir\face\turn:
+.ftloop\dir:
+    fturn_loop
+    addi t4, t4, -1
+    bnez t4, .ftloop\dir
 .endm
 
-.macro fface_loop dir face
-    mv t0, a1
-    mv t1, a2
-    fturn_loop \dir \face 0
-    fturn_loop \dir \face 1
-    fturn_loop \dir \face 2
-.endm
-
-.macro fill dir str int len
+.macro fill dir str int
 .floop\dir:
-    beq \len, x0, .defloop\dir
-    fface_loop \dir 0
-    fface_loop \dir 1
-    fface_loop \dir 2
-    j .defloop\dir
+    table_address t6, s11, a1, a2
+    lb s3, 0(t6)
+    andi s3, s3, TARGET_SIDE-1
+    beq s3, s7, .defloop\dir
+    addi s3, s3, -1
+    fface_loop \dir
 .mfloop\dir:
-    mv a1, t0
-    mv a2, t1
-    sb t3, 0(\str)
+    sb s3, 0(\str)
     addi \str, \str, \int
-    addi \len, \len, -1
     j .floop\dir
 .defloop\dir:
 .endm
@@ -1804,10 +1868,11 @@ build_table:
 .type solve, @function
 solve:
 
-    mv s0, a0
+    la s0, move_data
+    li s7, 10
 
     # move[12] at a0, end with 255
-    addi sp, sp, -12
+    addi sp, sp, -16
     mv s1, sp
     mv s5, a1
     mv s6, a2
@@ -1815,23 +1880,17 @@ solve:
     # target part move[]
     mv a1, a3
     mv a2, a4
-    to_dense t0, a1, a2
-    get_table s3, s0, t0
-    addi s3, s3, -TARGET_SIDE-1
-    add s2, s1, s3
-    mv s4, s2
-    sb a5, 0(s2)
-    addi s2, s2, -1
-    fill B s2, -1, s3
+    addi s4, s1, 5
+    addi s2, s4, -1
+    fill B s2, -1
+    addi s1, s2, 1
+    sb a5, 0(s4)
 
     # solve part move[]
     mv a1, s5
     mv a2, s6
-    to_dense t0, a1, a2
-    get_table s3, s0, t0
-    addi s3, s3, -1
     addi s2, s4, 1
-    fill A s2, 1, s3
+    fill A s2, 1
     
     li t0, 255
     sb t0, 0(s2)
@@ -1857,10 +1916,10 @@ print:
     addi s0, s0, 1
     j .ploop
 .deploop:
-    addi sp, sp, 12
+    addi sp, sp, 16
     ret
 .size print, .-print
 
-.balign 4
 .section .bss
+.balign 4
 .Lheap_start:
