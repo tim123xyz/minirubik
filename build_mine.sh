@@ -1,0 +1,1 @@
+/opt/riscv/bin/riscv32-unknown-elf-g++ -O2 -std=gnu++20 -march=rv32i -mabi=ilp32 mine.cpp -o mine.elf

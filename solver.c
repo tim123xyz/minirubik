@@ -190,8 +190,8 @@ static int valid(const state_t *state)
 
 static uint8_t *build_table(uint8_t *diameter)
 {
-    uint8_t *toward_solved = malloc(STATES);
-    uint32_t *queue = malloc((size_t) STATES * sizeof *queue);
+    static uint8_t toward_solved[STATES];
+    static uint32_t queue[STATES];
     uint16_t permutation[3][PERMUTATIONS], orientation[3][ORIENTATIONS];
     uint32_t head = 0, tail = 1, level_end = 1;
     state_t state;
@@ -242,9 +242,7 @@ static uint8_t *build_table(uint8_t *diameter)
             }
         }
     }
-    free(queue);
     if (tail != STATES) {
-        free(toward_solved);
         return NULL;
     }
     return toward_solved;
@@ -319,6 +317,12 @@ static int self_test(void)
 
 int main(int argc, char **argv)
 {
+    char program[] = "mine";
+    char input[] = "21345671111111";
+    char *fake_argv[] = {program, input, NULL};
+    argc = 2;
+    argv = fake_argv;
+
     state_t state;
     uint8_t diameter;
     if (argc == 2 && !strcmp(argv[1], "--self-test")) {

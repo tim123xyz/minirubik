@@ -1,0 +1,1 @@
+/opt/riscv/bin/riscv32-unknown-elf-gcc -O2 -std=c99 -march=rv32i -mabi=ilp32 solver.c -o solver.elf
