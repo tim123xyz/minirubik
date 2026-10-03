@@ -163,7 +163,7 @@ static uint8_t *build_table(uint8_t *diameter)
                 next_p = permutation[face][next_p];
                 next_o = orientation[face][next_o];
                 rank_t there = {.p = next_p, .o = next_o};
-                uint32_t next_rank = (uint32_t) there.p * ORIENTATIONS + there.o;
+                uint32_t next_rank = (uint32_t) there.p + there.o * PERMUTATIONS;
                 if (toward_solved[next_rank] == UINT8_MAX) {
                     uint8_t move = (uint8_t) (face * 3U + turn);
                     toward_solved[next_rank] = inverse_move[move];
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
     }
     const char *separator = "";
     for (rank_t ranked = rank_state(&state); ranked.p != 0 || ranked.o != 0;) {
-        uint32_t rank = (uint32_t) ranked.p * ORIENTATIONS + ranked.o;
+        uint32_t rank = (uint32_t) ranked.p + ranked.o * PERMUTATIONS;
         uint8_t move = table[rank];
         printf("%s%s", separator, move_names[move]);
         separator = " ";
