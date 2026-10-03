@@ -1600,9 +1600,9 @@ rank_state:
 .size rank_state, .-rank_state
 
 .macro memset ptr, size, value
-    li t6, \size
-    add t5, \ptr, t6
     mv t6, \ptr
+    li t5, \size
+    add t5, \ptr, t5
     li t4, \value
 .mloop:
     sw   t4, 0(t6)
@@ -1611,26 +1611,13 @@ rank_state:
 .endm
 
 .macro get_table rd, ptr, dense
-    srli t6, \dense, 1
-    add t6, \ptr, t6
+    add t6, \ptr, \dense
     lbu \rd, 0(t6)
-    andi t6, \dense, 1
-    slli t6, t6, 2
-    srl \rd, \rd, t6
-    andi \rd, \rd, 15
 .endm
 
 .macro set_table rs, ptr, dense
-    andi t4, \rs, 15
-    xori t4, t4, 15
-    andi t6, \dense, 1
-    slli t6, t6, 2
-    sll t4, t4, t6
-    srli t6, \dense, 1
-    add t6, \ptr, t6
-    lbu t3, 0(t6)
-    xor t3, t3, t4
-    sb t3, 0(t6)
+    add t6, \ptr, \dense
+    sb \rs, 0(t6)
 .endm
 
 .macro mul5040 rd, input
@@ -1660,9 +1647,7 @@ rank_state:
     to_dense t3, t0, t1
     get_table t4, s2, t3
     
-    # 0x0F
-    li t5, 15
-    bne t4, t5, .touched\face\turn
+    bne t4, x0, .touched\face\turn
     addi t5, s9, 1
 
     set_table t5, s2, t3
@@ -1722,22 +1707,23 @@ build_table:
     ret
 .normal_start:
     la s2, .Lheap_start
-    li t0, PERMUTATIONS*ORIENTATIONS/2
+    li t0, PERMUTATIONS*ORIENTATIONS
     add s3, s2, t0
     li t0, 4*(BFS_DEPTH5+BFS_DEPTH6)
     add a0, s3, t0
     li a7, 214
     ecall
-    memset s2, PERMUTATIONS*ORIENTATIONS/2, -1
+    # memset s2, PERMUTATIONS*ORIENTATIONS, 0
 
     # init queue[], table[]
     sw x0, 0(s3)
     sh s0, 4(s3)
     sh s1, 6(s3)
 
-    set_table x0, s2, x0
+    li t1, 1
+    set_table t1, s2, x0
     to_dense t0, s0, s1
-    li t1, TARGET_SIDE
+    li t1, TARGET_SIDE+1
     set_table t1, s2, t0
 
     # head at s4, tail at s5, end at s6
@@ -1774,10 +1760,8 @@ build_table:
 
     to_dense t3, t0, t1
     get_table t4, s0, t3
-    .ifc \dir, A
-        addi t4, t4, 1
-    .else
-        addi t4, t4, 1-TARGET_SIDE
+    .ifc \dir, B
+        addi t4, t4, -TARGET_SIDE
     .endif
     bne t4, s3, .skip\dir\face\turn
     .ifc \dir, A
@@ -1833,7 +1817,7 @@ solve:
     mv a2, a4
     to_dense t0, a1, a2
     get_table s3, s0, t0
-    addi s3, s3, -TARGET_SIDE
+    addi s3, s3, -TARGET_SIDE-1
     add s2, s1, s3
     mv s4, s2
     sb a5, 0(s2)
@@ -1845,6 +1829,7 @@ solve:
     mv a2, s6
     to_dense t0, a1, a2
     get_table s3, s0, t0
+    addi s3, s3, -1
     addi s2, s4, 1
     fill A s2, 1, s3
     
