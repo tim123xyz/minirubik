@@ -150,25 +150,50 @@ static inline void set_table(uint8_t *table, uint32_t rank, uint8_t depth)
     table[rank] = depth;
 }
 
+static void dfs(uint8_t *table, rank_t rank, uint32_t dense, uint8_t prev_face, uint8_t depth, uint8_t target) {
+    if (get_table(table, dense) > depth) {
+        set_table(table, dense, depth);
+        if (depth == target) {
+            return;
+        }
+        uint16_t p = rank.p;
+        uint16_t o = rank.o;
+        for (uint8_t face = 0; face < 3; ++face) {
+            uint16_t next_p = p, next_o = o;
+            if (face == prev_face) {
+                continue;
+            }
+            for (uint8_t turn = 0; turn < 3; ++turn) {
+                next_p = permutation[face][next_p];
+                next_o = orientation[face][next_o];
+                uint32_t next_dense = (uint32_t) next_p + next_o * PERMUTATIONS;
+                dfs(table, {.p = next_p, .o = next_o}, next_dense, face, depth + 1, target);
+            }
+        }
+    }
+    return;
+}
+
 static uint8_t *build_table(uint8_t *diameter)
 {
     static uint8_t toward_solved[STATES];
     memset(toward_solved, UINT8_MAX, sizeof toward_solved);
-    set_table(toward_solved, 0, 0);
-    for (uint8_t depth = 0; depth < 11; ++depth) {
+    uint8_t depth = 7;
+    dfs(toward_solved, {.p = 0, .o = 0}, 0, UINT8_MAX, 0, depth);
+    for (; depth < 11; ++depth) {
         uint8_t next_depth = depth + 1;
-        for (uint32_t rank = 0; rank < STATES; ++rank) {
-            if (get_table(toward_solved, rank) == depth) {
-                uint16_t p = rank % PERMUTATIONS;
-                uint16_t o = rank / PERMUTATIONS;
-                for (uint8_t face = 0; face < 3; ++face) {
-                    uint16_t next_p = p, next_o = o;
-                    for (uint8_t turn = 0; turn < 3; ++turn) {
-                        next_p = permutation[face][next_p];
-                        next_o = orientation[face][next_o];
-                        uint32_t next_rank = (uint32_t) next_p + next_o * PERMUTATIONS;
-                        if (get_table(toward_solved, next_rank) == UINT8_MAX)
-                            set_table(toward_solved, next_rank, next_depth);
+        for (uint16_t p = 0; p < PERMUTATIONS; ++p) {
+            for (uint16_t o = 0; o < ORIENTATIONS; ++o) {
+                if (get_table(toward_solved, (uint32_t) p + o * PERMUTATIONS) == depth) {
+                    for (uint8_t face = 0; face < 3; ++face) {
+                        uint16_t next_p = p, next_o = o;
+                        for (uint8_t turn = 0; turn < 3; ++turn) {
+                            next_p = permutation[face][next_p];
+                            next_o = orientation[face][next_o];
+                            uint32_t next_rank = (uint32_t) next_p + next_o * PERMUTATIONS;
+                            if (get_table(toward_solved, next_rank) == UINT8_MAX)
+                                set_table(toward_solved, next_rank, next_depth);
+                        }
                     }
                 }
             }
