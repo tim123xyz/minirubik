@@ -140,40 +140,44 @@ static rank_t apply_move(rank_t rank, uint8_t move)
     return rank;
 }
 
+static inline uint8_t get_table(const uint8_t *table, uint32_t rank)
+{
+    return table[rank];
+}
+
+static inline void set_table(uint8_t *table, uint32_t rank, uint8_t depth)
+{
+    table[rank] = depth;
+}
+
 static uint8_t *build_table(uint8_t *diameter)
 {
     static uint8_t toward_solved[STATES];
-    static rank_t queue[STATES];
-    uint32_t head = 0, tail = 1, level_end = 1;
-    memset(toward_solved, UINT8_MAX, STATES);
-    queue[0] = {.p = 0, .o = 0};
-    toward_solved[0] = 0;
-    *diameter = 0;
-    while (head < tail) {
-        if (head == level_end) {
-            level_end = tail;
-            ++*diameter;
-        }
-        rank_t here = queue[head++];
-        uint16_t p = here.p;
-        uint16_t o = here.o;
-        for (uint8_t face = 0; face < 3; ++face) {
-            uint16_t next_p = p, next_o = o;
-            for (uint8_t turn = 0; turn < 3; ++turn) {
-                next_p = permutation[face][next_p];
-                next_o = orientation[face][next_o];
-                rank_t there = {.p = next_p, .o = next_o};
-                uint32_t next_rank = (uint32_t) there.p + there.o * PERMUTATIONS;
-                if (toward_solved[next_rank] == UINT8_MAX) {
-                    uint8_t move = (uint8_t) (face * 3U + turn);
-                    toward_solved[next_rank] = inverse_move[move];
-                    queue[tail++] = there;
+    memset(toward_solved, UINT8_MAX, sizeof toward_solved);
+    set_table(toward_solved, 0, 0);
+    for (uint8_t depth = 0; depth < 11; ++depth) {
+        uint8_t next_depth = depth + 1;
+        for (uint32_t rank = 0; rank < STATES; ++rank) {
+            if (get_table(toward_solved, rank) == depth) {
+                uint16_t p = rank % PERMUTATIONS;
+                uint16_t o = rank / PERMUTATIONS;
+                for (uint8_t face = 0; face < 3; ++face) {
+                    uint16_t next_p = p, next_o = o;
+                    for (uint8_t turn = 0; turn < 3; ++turn) {
+                        next_p = permutation[face][next_p];
+                        next_o = orientation[face][next_o];
+                        uint32_t next_rank = (uint32_t) next_p + next_o * PERMUTATIONS;
+                        if (get_table(toward_solved, next_rank) == UINT8_MAX)
+                            set_table(toward_solved, next_rank, next_depth);
+                    }
                 }
             }
         }
     }
-    if (tail != STATES)
-        return NULL;
+    for (uint32_t rank = 0; rank < STATES; ++rank)
+        if (get_table(toward_solved, rank) == 0xFF)
+            return NULL;
+    *diameter = 11;
     return toward_solved;
 }
 
@@ -216,6 +220,26 @@ static int self_test(void)
     return 1;
 }
 
+static uint8_t find_move(const uint8_t *table, rank_t rank)
+{
+    uint16_t p = rank.p, o = rank.o;
+    uint8_t depth = get_table(table, (uint32_t) p + o * PERMUTATIONS);
+    if (depth == 0 || depth == 0xFF)
+        return UINT8_MAX;
+    uint8_t target = depth - 1;
+    for (uint8_t face = 0; face < 3; ++face) {
+        uint16_t next_p = p, next_o = o;
+        for(uint8_t turn = 0; turn < 3; ++turn) {
+            next_p = permutation[face][next_p];
+            next_o = orientation[face][next_o];
+            if (get_table(table, (uint32_t) next_p + next_o * PERMUTATIONS) == target) {
+                return face * 3U + turn;
+            }
+        }
+    }
+    return UINT8_MAX;
+}
+
 int main(int argc, char **argv)
 {
     char program[] = "mine";
@@ -254,12 +278,15 @@ int main(int argc, char **argv)
         return 1;
     }
     const char *separator = "";
-    for (rank_t ranked = rank_state(&state); ranked.p != 0 || ranked.o != 0;) {
-        uint32_t rank = (uint32_t) ranked.p + ranked.o * PERMUTATIONS;
-        uint8_t move = table[rank];
+    for (rank_t rank = rank_state(&state); rank.p != 0 || rank.o != 0;) {
+        uint8_t move = find_move(table, rank);
+        if (move == UINT8_MAX) {
+            fputs("could not follow state table\n", stderr);
+            return 1;
+        }
         printf("%s%s", separator, move_names[move]);
         separator = " ";
-        ranked = apply_move(ranked, move);
+        rank = apply_move(rank, move);
     }
     putchar('\n');
     return output_failed();
