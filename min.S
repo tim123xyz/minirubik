@@ -1600,26 +1600,37 @@ rank_state:
 .size rank_state, .-rank_state
 
 .macro memset ptr, size, value
+    li t6, \size
+    add t5, \ptr, t6
     mv t6, \ptr
-    li t5, \size
     li t4, \value
 .mloop:
-    beqz t5, .eloop
     sw   t4, 0(t6)
     addi t6, t6, 4
-    addi t5, t5, -4
-    j .mloop
-.eloop:
+    bne t6, t5, .mloop
 .endm
 
 .macro get_table rd, ptr, dense
-    add t6, \ptr, \dense
+    srli t6, \dense, 1
+    add t6, \ptr, t6
     lbu \rd, 0(t6)
+    andi t6, \dense, 1
+    slli t6, t6, 2
+    srl \rd, \rd, t6
+    andi \rd, \rd, 15
 .endm
 
 .macro set_table rs, ptr, dense
-    add t6, \ptr, \dense
-    sb \rs, 0(t6)
+    andi t4, \rs, 15
+    xori t4, t4, 15
+    andi t6, \dense, 1
+    slli t6, t6, 2
+    sll t4, t4, t6
+    srli t6, \dense, 1
+    add t6, \ptr, t6
+    lbu t3, 0(t6)
+    xor t3, t3, t4
+    sb t3, 0(t6)
 .endm
 
 .macro mul5040 rd, input
@@ -1649,10 +1660,11 @@ rank_state:
     to_dense t3, t0, t1
     get_table t4, s2, t3
     
-    # 0xFF
-    li t5, 255
+    # 0x0F
+    li t5, 15
     bne t4, t5, .touched\face\turn
     addi t5, s9, 1
+
     set_table t5, s2, t3
     sh t0, 0(s5)
     sh t1, 2(s5)
@@ -1710,15 +1722,15 @@ build_table:
     ret
 .normal_start:
     la s2, .Lheap_start
-    li t0, PERMUTATIONS*ORIENTATIONS
+    li t0, PERMUTATIONS*ORIENTATIONS/2
     add s3, s2, t0
     li t0, 4*(BFS_DEPTH5+BFS_DEPTH6)
     add a0, s3, t0
     li a7, 214
     ecall
-    memset s2, PERMUTATIONS*ORIENTATIONS, -1
+    memset s2, PERMUTATIONS*ORIENTATIONS/2, -1
 
-    # init queue[0, target]
+    # init queue[], table[]
     sw x0, 0(s3)
     sh s0, 4(s3)
     sh s1, 6(s3)
@@ -1735,8 +1747,6 @@ build_table:
     add s6, s3, t2
     # loop start
 .loop:
-    bgeu s4, s6, .deloop
-
     # now.p at s7, now.o at s8, depth at s9
     lhu s7, 0(s4)
     lhu s8, 2(s4)
@@ -1746,8 +1756,7 @@ build_table:
     face_loop 0
     face_loop 1
     face_loop 2
-    j .loop
-.deloop:
+    bltu s4, s6, .loop
     li a0, 0
     ret
 .size build_table, .-build_table
