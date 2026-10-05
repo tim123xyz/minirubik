@@ -317,11 +317,11 @@ static int self_test(void)
 
 int main(int argc, char **argv)
 {
-    char program[] = "mine";
-    char input[] = "21345671111111";
-    char *fake_argv[] = {program, input, NULL};
-    argc = 2;
-    argv = fake_argv;
+    // char program[] = "mine";
+    // char input[] = "21345671111111";
+    // char *fake_argv[] = {program, input, NULL};
+    // argc = 2;
+    // argv = fake_argv;
 
     state_t state;
     uint8_t diameter;

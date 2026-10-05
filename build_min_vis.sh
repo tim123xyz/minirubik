@@ -1,0 +1,1 @@
+/opt/riscv/bin/riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -e main min_vis.S -o min_vis.elf

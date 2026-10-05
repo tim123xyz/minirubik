@@ -1,0 +1,1 @@
+/opt/riscv/bin/riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -nostartfiles -e main ida.S table.S -o ida.elf

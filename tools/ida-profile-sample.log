@@ -1,0 +1,14 @@
+Oracle BFS PASS: states=3674160 diameter=11 wall=0.165s
+Node definition: one first entry into each IDA* stack frame, including immediate pruning, roots, table hits and repeated visits across thresholds; sparse-table suffix replay contributes no nodes.
+Depth sample PASS: depth=0 rank=0 code=12345671111111 nodes=1
+Depth sample PASS: depth=10 rank=1 code=12345671111123 nodes=4024
+Depth sample PASS: depth=8 rank=4 code=12345671111222 nodes=171
+Depth sample PASS: depth=6 rank=16 code=12345671112323 nodes=3
+Depth sample PASS: depth=9 rank=36 code=12345671122112 nodes=1287
+Depth sample PASS: depth=7 rank=38 code=12345671122133 nodes=72
+Depth sample PASS: depth=11 rank=275 code=12345672121232 nodes=17967
+Depth sample PASS: depth=5 rank=5393 code=12354762123131 nodes=1
+Depth sample PASS: depth=1 rank=6577 code=12356741112323 nodes=1
+Depth sample PASS: depth=3 rank=18225 code=12435761111111 nodes=1
+Depth sample PASS: depth=4 rank=18367 code=12435761231321 nodes=1
+Depth sample PASS: depth=2 rank=114453 code=13462751111111 nodes=1

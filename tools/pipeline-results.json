@@ -1,0 +1,46 @@
+[
+  {
+    "benchmark": "alu-forward",
+    "iterations": 1000,
+    "# instructions retired": 4005,
+    "cycles": 6009,
+    "runinfo": {
+      "ISA extensions": [],
+      "processor": "RV32_5S",
+      "source file": "/home/user/minirubik/tools/pipe-alu-forward.elf"
+    }
+  },
+  {
+    "benchmark": "branch",
+    "iterations": 1000,
+    "# instructions retired": 3005,
+    "cycles": 5009,
+    "runinfo": {
+      "ISA extensions": [],
+      "processor": "RV32_5S",
+      "source file": "/home/user/minirubik/tools/pipe-branch.elf"
+    }
+  },
+  {
+    "benchmark": "load-gap",
+    "iterations": 1000,
+    "# instructions retired": 5005,
+    "cycles": 9009,
+    "runinfo": {
+      "ISA extensions": [],
+      "processor": "RV32_5S",
+      "source file": "/home/user/minirubik/tools/pipe-load-gap.elf"
+    }
+  },
+  {
+    "benchmark": "load-use",
+    "iterations": 1000,
+    "# instructions retired": 4005,
+    "cycles": 9009,
+    "runinfo": {
+      "ISA extensions": [],
+      "processor": "RV32_5S",
+      "source file": "/home/user/minirubik/tools/pipe-load-use.elf"
+    }
+  }
+]

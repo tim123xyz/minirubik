@@ -1,0 +1,12 @@
+
+Program exited with code: 0
+{
+    "# instructions retired": 5005,
+    "cycles": 9009,
+    "runinfo": {
+        "ISA extensions": [
+        ],
+        "processor": "RV32_5S",
+        "source file": "/home/user/minirubik/tools/pipe-load-gap.elf"
+    }
+}

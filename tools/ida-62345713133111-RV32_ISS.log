@@ -1,0 +1,14 @@
+R2 D B2 R' D R' D B' 
+
+Program exited with code: 0
+{
+    "# instructions retired": 24830,
+    "cycles": 24830,
+    "execution time (ms)": 2,
+    "runinfo": {
+        "ISA extensions": [
+        ],
+        "processor": "RV32_ISS",
+        "source file": "/home/user/minirubik/tools/target-ida-62345713133111.elf"
+    }
+}

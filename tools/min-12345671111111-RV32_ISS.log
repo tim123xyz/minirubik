@@ -1,0 +1,13 @@
+
+Program exited with code: 0
+{
+    "# instructions retired": 197,
+    "cycles": 197,
+    "execution time (ms)": 0,
+    "runinfo": {
+        "ISA extensions": [
+        ],
+        "processor": "RV32_ISS",
+        "source file": "/home/user/minirubik/tools/target-min-12345671111111.elf"
+    }
+}

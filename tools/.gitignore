@@ -1,0 +1,11 @@
+host
+min-host
+ida-host
+ida-test
+ida-profile
+ida_profile_impl.inc
+ida_profile_oracle.inc
+oracle
+*.elf
+target-*.S
+pipe-*.S

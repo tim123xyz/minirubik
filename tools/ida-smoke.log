@@ -1,0 +1,11 @@
+Oracle BFS PASS: reachable=3674160 diameter=11 wall=0.139s; model=solver.c only
+Oracle counts depth 0..11: 1 9 54 321 1847 9992 50136 227536 870072 1887748 623800 2644
+H2 transitions PASS: all 15120 permutation + 2187 orientation entries agree with solver.c; maxima p=5039 o=728
+H2 sparse PASS: all 12224 sorted depth<=5 records exactly match independent BFS; every inverse move and table suffix replays with solver.c
+H4 records PASS: all 12224 uint32 key/depth/move decodings and re-encodings; no packed-nibble distance accessor is used
+H1 PASS: actual sparse h=exact depth at <=5, otherwise 6, admissible on all 3674160 states; no perm/orient PDB used
+H4 rank PASS: all 3674160 oracle/candidate rank round trips and state reconstructions agree
+Assembly data PASS: table.S; 15120 permutation + 2187 orientation + 12224 sparse + 257 prefix entries; 84024 bytes
+Exhaustive table/heuristic/encoding wall=0.557s
+H3 PARTIAL: checked=300/3674160 actual ida_star paths, optimal lengths and solver.c replay; search wall=0.031s total wall=0.592s
+H3 sampled counts depth 0..11: 1 1 1 1 1 2 4 22 74 135 57 1

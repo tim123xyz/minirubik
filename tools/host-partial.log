@@ -1,0 +1,6 @@
+Oracle: states=3674160 diameter=11 reconstructed maximum=11
+H1: N/A (no heuristic); H2: all 15120 permutation and 2187 orientation transitions match oracle, solved transitions verified
+H2: transition maxima p=5039 o=728; bidirectional table intentionally partial, not a full distance table
+H4: byte accessor agrees at all even/odd indices; no packed accessor
+H3 progress 0/24 elapsed=0.001s
+H3 PARTIAL checked=24 search wall=0.006s total wall=1.258s diameter=11

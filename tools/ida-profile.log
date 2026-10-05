@@ -1,0 +1,64 @@
+Generated instrumentation PASS: only uint64_t counter declaration and frame-entry increment; ida.cpp SHA-256=daa8075bf723f605a53253ad2aa9b770ed8675403ca5a5c2a4266572eead0514
+Oracle BFS PASS: states=3674160 diameter=11 wall=0.161s
+Node definition: one first entry into each IDA* stack frame, including immediate pruning, roots, table hits and repeated visits across thresholds; sparse-table suffix replay contributes no nodes.
+Depth sample PASS: depth=0 rank=0 code=12345671111111 nodes=1
+Depth sample PASS: depth=10 rank=1 code=12345671111123 nodes=4024
+Depth sample PASS: depth=8 rank=4 code=12345671111222 nodes=171
+Depth sample PASS: depth=6 rank=16 code=12345671112323 nodes=3
+Depth sample PASS: depth=9 rank=36 code=12345671122112 nodes=1287
+Depth sample PASS: depth=7 rank=38 code=12345671122133 nodes=72
+Depth sample PASS: depth=11 rank=275 code=12345672121232 nodes=17967
+Depth sample PASS: depth=5 rank=5393 code=12354762123131 nodes=1
+Depth sample PASS: depth=1 rank=6577 code=12356741112323 nodes=1
+Depth sample PASS: depth=3 rank=18225 code=12435761111111 nodes=1
+Depth sample PASS: depth=4 rank=18367 code=12435761231321 nodes=1
+Depth sample PASS: depth=2 rank=114453 code=13462751111111 nodes=1
+Profile progress: checked=100000/3674160 total_nodes=157084759 search_wall=10.050s
+Profile progress: checked=200000/3674160 total_nodes=310600113 search_wall=19.854s
+Profile progress: checked=300000/3674160 total_nodes=468558052 search_wall=29.956s
+Profile progress: checked=400000/3674160 total_nodes=621260623 search_wall=39.794s
+Profile progress: checked=500000/3674160 total_nodes=777097472 search_wall=49.762s
+Profile progress: checked=600000/3674160 total_nodes=932339623 search_wall=59.653s
+Profile progress: checked=700000/3674160 total_nodes=1087616613 search_wall=69.614s
+Profile progress: checked=800000/3674160 total_nodes=1242673717 search_wall=79.643s
+Profile progress: checked=900000/3674160 total_nodes=1397316902 search_wall=89.513s
+Profile progress: checked=1000000/3674160 total_nodes=1550547251 search_wall=99.292s
+Profile progress: checked=1100000/3674160 total_nodes=1703371716 search_wall=109.290s
+Profile progress: checked=1200000/3674160 total_nodes=1862088071 search_wall=119.485s
+Profile progress: checked=1300000/3674160 total_nodes=2016716843 search_wall=129.323s
+Profile progress: checked=1400000/3674160 total_nodes=2170626431 search_wall=139.127s
+Profile progress: checked=1500000/3674160 total_nodes=2326733059 search_wall=149.079s
+Profile progress: checked=1600000/3674160 total_nodes=2480440589 search_wall=158.832s
+Profile progress: checked=1700000/3674160 total_nodes=2634349387 search_wall=168.682s
+Profile progress: checked=1800000/3674160 total_nodes=2787663719 search_wall=178.492s
+Profile progress: checked=1900000/3674160 total_nodes=2942198428 search_wall=188.434s
+Profile progress: checked=2000000/3674160 total_nodes=3096083618 search_wall=198.285s
+Profile progress: checked=2100000/3674160 total_nodes=3251697325 search_wall=208.158s
+Profile progress: checked=2200000/3674160 total_nodes=3405660794 search_wall=217.960s
+Profile progress: checked=2300000/3674160 total_nodes=3561116992 search_wall=227.930s
+Profile progress: checked=2400000/3674160 total_nodes=3714096255 search_wall=237.725s
+Profile progress: checked=2500000/3674160 total_nodes=3872594760 search_wall=247.929s
+Profile progress: checked=2600000/3674160 total_nodes=4025484520 search_wall=257.672s
+Profile progress: checked=2700000/3674160 total_nodes=4178916279 search_wall=267.419s
+Profile progress: checked=2800000/3674160 total_nodes=4331952915 search_wall=277.229s
+Profile progress: checked=2900000/3674160 total_nodes=4487669675 search_wall=287.196s
+Profile progress: checked=3000000/3674160 total_nodes=4641335299 search_wall=296.989s
+Profile progress: checked=3100000/3674160 total_nodes=4796472709 search_wall=306.867s
+Profile progress: checked=3200000/3674160 total_nodes=4950912254 search_wall=316.658s
+Profile progress: checked=3300000/3674160 total_nodes=5103618734 search_wall=326.398s
+Profile progress: checked=3400000/3674160 total_nodes=5259159091 search_wall=336.403s
+Profile progress: checked=3500000/3674160 total_nodes=5415367771 search_wall=346.351s
+Profile progress: checked=3600000/3674160 total_nodes=5569485809 search_wall=356.178s
+Depth 0: states=1 total_nodes=1 mean=1.000000 worst=1 worst_rank=0 worst_code=12345671111111
+Depth 1: states=9 total_nodes=9 mean=1.000000 worst=1 worst_rank=6577 worst_code=12356741112323
+Depth 2: states=54 total_nodes=54 mean=1.000000 worst=1 worst_rank=114453 worst_code=13462751111111
+Depth 3: states=321 total_nodes=321 mean=1.000000 worst=1 worst_rank=18225 worst_code=12435761111111
+Depth 4: states=1847 total_nodes=1847 mean=1.000000 worst=1 worst_rank=18367 worst_code=12435761231321
+Depth 5: states=9992 total_nodes=9992 mean=1.000000 worst=1 worst_rank=5393 worst_code=12354762123131
+Depth 6: states=50136 total_nodes=292740 mean=5.838918 worst=10 worst_rank=131 worst_code=12345671223233
+Depth 7: states=227536 total_nodes=9488136 mean=41.699494 worst=74 worst_rank=206 worst_code=12345671322332
+Depth 8: states=870072 total_nodes=218833315 mean=251.511731 worst=462 worst_rank=2592 worst_code=12346752311111
+Depth 9: states=1887748 total_nodes=2480603817 mean=1314.054533 worst=2794 worst_rank=44897 worst_code=12563742313232
+Depth 10: states=623800 total_nodes=2927060868 mean=4692.306618 worst=16778 worst_rank=2678248 worst_code=61523743232123
+Depth 11: states=2644 total_nodes=51683578 mean=19547.495461 worst=57355 worst_rank=2437047 worst_code=54721631111111
+PROFILE PASS ALL: states=3674160 total_nodes=5687974678 mean=1548.102064 worst=57355 worst_rank=2437047 worst_code=54721631111111 search_wall=363.776s total_wall=363.941s

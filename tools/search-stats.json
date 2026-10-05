@@ -1,0 +1,25 @@
+{
+  "implementation": "ida.cpp",
+  "source_sha256": "daa8075bf723f605a53253ad2aa9b770ed8675403ca5a5c2a4266572eead0514",
+  "node_definition": "First entry into each IDA* stack frame; includes root, immediate f-threshold pruning, sparse-table hits, and repeated visits across thresholds; excludes table-suffix replay.",
+  "states": 3674160,
+  "diameter": 11,
+  "per_depth": [
+    {"depth": 0, "states": 1, "total_nodes": 1, "mean_nodes": 1.000000000, "worst_nodes": 1, "worst_rank": 0, "worst_code": "12345671111111"},
+    {"depth": 1, "states": 9, "total_nodes": 9, "mean_nodes": 1.000000000, "worst_nodes": 1, "worst_rank": 6577, "worst_code": "12356741112323"},
+    {"depth": 2, "states": 54, "total_nodes": 54, "mean_nodes": 1.000000000, "worst_nodes": 1, "worst_rank": 114453, "worst_code": "13462751111111"},
+    {"depth": 3, "states": 321, "total_nodes": 321, "mean_nodes": 1.000000000, "worst_nodes": 1, "worst_rank": 18225, "worst_code": "12435761111111"},
+    {"depth": 4, "states": 1847, "total_nodes": 1847, "mean_nodes": 1.000000000, "worst_nodes": 1, "worst_rank": 18367, "worst_code": "12435761231321"},
+    {"depth": 5, "states": 9992, "total_nodes": 9992, "mean_nodes": 1.000000000, "worst_nodes": 1, "worst_rank": 5393, "worst_code": "12354762123131"},
+    {"depth": 6, "states": 50136, "total_nodes": 292740, "mean_nodes": 5.838918143, "worst_nodes": 10, "worst_rank": 131, "worst_code": "12345671223233"},
+    {"depth": 7, "states": 227536, "total_nodes": 9488136, "mean_nodes": 41.699493706, "worst_nodes": 74, "worst_rank": 206, "worst_code": "12345671322332"},
+    {"depth": 8, "states": 870072, "total_nodes": 218833315, "mean_nodes": 251.511731213, "worst_nodes": 462, "worst_rank": 2592, "worst_code": "12346752311111"},
+    {"depth": 9, "states": 1887748, "total_nodes": 2480603817, "mean_nodes": 1314.054533232, "worst_nodes": 2794, "worst_rank": 44897, "worst_code": "12563742313232"},
+    {"depth": 10, "states": 623800, "total_nodes": 2927060868, "mean_nodes": 4692.306617506, "worst_nodes": 16778, "worst_rank": 2678248, "worst_code": "61523743232123"},
+    {"depth": 11, "states": 2644, "total_nodes": 51683578, "mean_nodes": 19547.495461422, "worst_nodes": 57355, "worst_rank": 2437047, "worst_code": "54721631111111"}
+  ],
+  "global": {"total_nodes": 5687974678, "mean_nodes": 1548.102063601, "worst_nodes": 57355, "worst_rank": 2437047, "worst_code": "54721631111111"},
+  "search_seconds": 363.776025,
+  "total_seconds": 363.940758,
+  "correctness": "PASS: all paths replay to solved using solver.c transitions and all lengths match independent BFS distances"
+}

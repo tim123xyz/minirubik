@@ -1,0 +1,12 @@
+
+Program exited with code: 0
+{
+    "# instructions retired": 4005,
+    "cycles": 6009,
+    "runinfo": {
+        "ISA extensions": [
+        ],
+        "processor": "RV32_5S",
+        "source file": "/home/user/minirubik/tools/pipe-alu-forward.elf"
+    }
+}
